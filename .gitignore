@@ -1,0 +1,16 @@
+# Ignore video inputs, generated outputs, and temp files
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
+*_temp_*
+
+# Ignore Whisper binaries and large GGML models
+whisper/*
+!whisper/.gitkeep
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+venv/
+.venv/
