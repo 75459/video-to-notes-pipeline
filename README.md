@@ -34,12 +34,16 @@ FFmpeg is required to extract audio tracks and sample video frames.
 2. Paste the following command and press `Enter`:
    ```powershell
    winget install Gyan.FFmpeg
-```
+   ```
 3. Wait for the installation to finish, then **close and reopen** your terminal window so Windows recognizes the new command.
 
 ### Step 3: Download This Project
-1. Click the green **`<> Code`** button at the top of this GitHub page and select **Download ZIP** (or clone via Git).
-2. Extract the ZIP archive to a simple folder path without special characters, e.g., `C:\VideoToNotes\`.
+* **Option A (Recommended for beginners):** Go to the [**Releases**](https://github.com/75459/video-to-pdf-transcript/releases/latest) page, download **`Source code (zip)`** under *Assets*, and extract it to a simple folder path without special characters, e.g., `C:\VideoToNotes\`.
+* **Option B (Git):** Clone the repository directly:
+  ```bash
+  git clone https://github.com/75459/video-to-pdf-transcript.git
+  cd video-to-pdf-transcript
+  ```
 
 ### Step 4: Install Required Python Libraries
 1. Open **PowerShell** inside your extracted project folder (you can right-click inside the folder in Windows Explorer and select *Open in Terminal*).
@@ -52,8 +56,8 @@ FFmpeg is required to extract audio tracks and sample video frames.
 Because executable binaries and AI models are too large for GitHub, you need to place them into the `whisper/` folder manually:
 1. Go to the official [ggml-org/whisper.cpp Releases](https://github.com/ggml-org/whisper.cpp/releases) page.
 2. Scroll down to **Assets** of the latest release and download the right archive for your hardware:
-   * **If you have an NVIDIA GPU (RTX 20/30/40/50 series or GTX):** Download **`whisper-bin-win-cuda-12.4.0-x64.zip`** (or the latest `cuda-12.x-x64.zip` build).
-   * **If you have an AMD GPU, Intel GPU, or no dedicated graphics card:** Download **`whisper-bin-x64.zip`**.
+   - **If you have an NVIDIA GPU (RTX 20/30/40/50 series or GTX):** Download **`whisper-bin-win-cuda-12.4.0-x64.zip`** (or the latest `cuda-12.x-x64.zip` build).
+   - **If you have an AMD GPU, Intel GPU, or no dedicated graphics card:** Download **`whisper-bin-x64.zip`**.
 3. Open the downloaded `.zip` archive and extract **`whisper-cli.exe`** along with **all `.dll` files** directly into the **`whisper/`** folder inside your project directory.
 
 ### Step 6: Download the Speech Model
