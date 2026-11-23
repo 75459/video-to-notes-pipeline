@@ -16,7 +16,7 @@ OUT_DIR = os.path.join(BASE_DIR, "output")
 WHISPER_EXE = os.path.join(BASE_DIR, "whisper", "whisper-cli.exe")
 MODEL_PATH = os.path.join(BASE_DIR, "whisper", "ggml-large-v3-turbo.bin")
 
-LANGUAGE = "pl"          # Transcription language ("pl", "en", "auto", etc.)
+LANGUAGE = "auto"        # Transcription language ("pl", "en", "auto", etc.)
 SAMPLE_INTERVAL = 2.0    # Screen sampling interval in seconds
 DIFF_THRESHOLD = 0.35    # Pixel diff sensitivity inside the presentation area
 SUPPORTED_EXTS = (".mp4", ".mkv", ".mov", ".avi", ".webm")
@@ -24,6 +24,19 @@ SUPPORTED_EXTS = (".mp4", ".mkv", ".mov", ".avi", ".webm")
 
 os.makedirs(VIDEO_DIR, exist_ok=True)
 os.makedirs(OUT_DIR, exist_ok=True)
+
+LANG_NAMES = {
+    "pl": "Polish", "en": "English", "de": "German", "fr": "French",
+    "es": "Spanish", "it": "Italian", "uk": "Ukrainian", "ru": "Russian",
+    "cs": "Czech", "sk": "Slovak", "nl": "Dutch", "pt": "Portuguese",
+    "ja": "Japanese", "zh": "Chinese", "ko": "Korean"
+}
+
+
+def format_lang_label(code):
+    code_clean = code.strip().lower()
+    name = LANG_NAMES.get(code_clean, code_clean.upper())
+    return f"{name} ({code_clean})"
 
 
 def has_cuda_binaries():
@@ -131,10 +144,10 @@ def run_with_spinner(message, est_seconds, cmd):
 
 
 def run_whisper_with_progress(message, est_seconds, cmd):
-    """Runs whisper-cli with -pp flag and parses live percentage & ETA with minimal overhead."""
+    """Runs whisper-cli with -pp flag, prints detected language, and parses live percentage & ETA."""
     start_time = time.time()
     stop_event = threading.Event()
-    state = {"pct": 0, "eta": f"~{format_duration(est_seconds)}"}
+    state = {"pct": 0, "eta": f"~{format_duration(est_seconds)}", "detected_lang": None, "printed_lang": False}
 
     full_cmd = cmd + ["-pp"]
     proc = subprocess.Popen(
@@ -153,6 +166,11 @@ def run_whisper_with_progress(message, est_seconds, cmd):
             if ch in (b"\n", b"\r"):
                 line = buf.decode("utf-8", errors="ignore")
                 buf = b""
+
+                lang_match = re.search(r"auto-detected language:\s*([a-zA-Z-]+)", line)
+                if lang_match:
+                    state["detected_lang"] = format_lang_label(lang_match.group(1))
+
                 match = re.search(r"progress\s*=\s*(\d+)%", line)
                 if match:
                     pct = int(match.group(1))
@@ -169,6 +187,11 @@ def run_whisper_with_progress(message, est_seconds, cmd):
         chars = ["|", "/", "-", "\\"]
         idx = 0
         while not stop_event.is_set():
+            if state["detected_lang"] and not state["printed_lang"]:
+                sys.stdout.write(f"\r  [DETECTED LANGUAGE]: {state['detected_lang']}                                      \n")
+                sys.stdout.flush()
+                state["printed_lang"] = True
+
             elapsed_int = int(time.time() - start_time)
             mins, secs = divmod(elapsed_int, 60)
             sys.stdout.write(
@@ -187,6 +210,9 @@ def run_whisper_with_progress(message, est_seconds, cmd):
     t_reader.join(timeout=1.0)
     stop_event.set()
     t_ui.join()
+
+    if state["detected_lang"] and not state["printed_lang"]:
+        sys.stdout.write(f"\r  [DETECTED LANGUAGE]: {state['detected_lang']}                                      \n")
 
     elapsed_int = int(time.time() - start_time)
     mins, secs = divmod(elapsed_int, 60)
@@ -387,6 +413,10 @@ def process_all():
         return
 
     gpu_mode = check_hardware_setup()
+    if LANGUAGE.strip().lower() == "auto":
+        print("[LANGUAGE MODE] Auto-detect (detected per video from first 30s)")
+    else:
+        print(f"[LANGUAGE MODE] Fixed: {format_lang_label(LANGUAGE)}")
     print("------------------------------------------------------------")
     print(f"Queued {len(tasks)} video file(s) for sequential processing.")
 
